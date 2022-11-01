@@ -1,12 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { useEffect, useState } from "react";
 import './App.css';
 import Login from "./Login";
 import { getTokenFromUrl } from "./spotify";
 import SpotifyWebApi from "spotify-web-api-js";
+import Player from "./Player";
+import { useDataLayerValue } from "./DataLayer";
 
 const spotify = new SpotifyWebApi();
 function App() {
-  const [token, setToken] = useState(null);
+  //const [token, setToken] = useState(null);
+  const [{user,token}, dispatch] = useDataLayerValue();
 
   // Run code based on given condition.
   useEffect(() => {
@@ -15,33 +19,35 @@ function App() {
      const _token = hash.access_token;
 
      if(_token){
-      setToken(_token);
+
+      dispatch({
+        type: "SET_TOKEN",
+        token: _token,
+      })
+     // setToken(_token);
 
       spotify.setAccessToken(_token);
-      
+
       // Allows back n forth btw react n spotify
 
       spotify.getMe().then(user => {
-        console.log('person', user);
-      })
+        dispatch({
+          type: "SET_USER",
+          user: user,
+        });
+       
+      });
      }
 
      console.log("I HAVE A TOKEN :point ", token)
   }, []);// Used to keep an eye on the url
 
-  return (
-    <div className="app">
-      {
-        token ? (
-          <h1> I am logged in</h1>
-        ) : (
-          <Login />
-        )
-      }
-    <Login />
-      
-    </div>
-  );
-} 
+  console.log('person', user);
+  console.log('alien', token);
+
+  return <div className="app">{token ? <Player spotify={spotify} /> : <Login />}</div>;
+  
+}
+
 
 export default App;
